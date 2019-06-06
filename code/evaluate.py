@@ -87,7 +87,7 @@ def evaluate_model(model, user_feature, item_feature, type_feature, num_users, n
         ndcgs = [r[1] for r in res]
         return (hits, ndcgs)
     # Single thread
-    for idx in xrange(len(_testRatings)):
+    for idx in range(len(_testRatings)):
         (p, r, ndcg) = eval_one_rating(idx)
         ps.append(p)
         rs.append(r)
@@ -164,11 +164,11 @@ def eval_one_rating(idx):
                         uuum_input[k][p_i][p_j] = _type_feature[index]
         k += 1
     
-    #print umtm_input.shape
+    #print(umtm_input.shape)
     predictions = _model.predict([np.array(user_input), np.array(item_input), umtm_input, umum_input, umtmum_input, uuum_input], 
                                  batch_size = 256, verbose = 0)
-    #print atten.shape
-    for i in xrange(len(items)):
+    #print(atten.shape)
+    for i in range(len(items)):
         item = items[i]
         map_item_score[item] = predictions[i]
     #items.pop()

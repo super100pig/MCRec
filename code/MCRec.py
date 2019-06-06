@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "1"
+# os.environ["CUDA_VISIBLE_DEVICES"] = "1"
 import tensorflow as tf
 config = tf.ConfigProto()
 config.gpu_options.allow_growth = True
@@ -50,11 +50,11 @@ def path_attention(user_latent, item_latent, path_latent, latent_size, att_size,
         tmp_output = (path_attention_layer_1(inputs))
         tmp_output = (path_attention_layer_2(tmp_output))
         output = concatenate([output, tmp_output])
-    
-    
+
     atten = Lambda(lambda x : K.softmax(x), name = '%s_attention_softmax'%path_name)(output)
     output = Lambda(lambda x: K.sum(x[0] * K.expand_dims(x[1], -1), 1))([path_latent, atten])
     return output
+
 
 def get_umtmum_embedding(umtmum_input, path_num, timestamps, length, user_latent, item_latent, path_attention_layer_1, path_attention_layer_2):
     conv_umtmum = Conv1D(filters = 128,
@@ -71,7 +71,7 @@ def get_umtmum_embedding(umtmum_input, path_num, timestamps, length, user_latent
     output = GlobalMaxPooling1D()(output)
     output = Dropout(0.5)(output)
 
-    for i in xrange(1, path_num):
+    for i in range(1, path_num):
         path_input = Lambda(slice, output_shape=(timestamps, length), arguments={'index':i})(umtmum_input)
         tmp_output = GlobalMaxPooling1D()(conv_umtmum(path_input))
         tmp_output = Dropout(0.5)(tmp_output)
@@ -81,6 +81,7 @@ def get_umtmum_embedding(umtmum_input, path_num, timestamps, length, user_latent
     #output = path_attention(user_latent, item_latent, output, 128, 64, path_attention_layer_1, path_attention_layer_2, 'umtmum')
     output = GlobalMaxPooling1D()(output)
     return output
+
 
 def get_umtm_embedding(umtm_input, path_num, timestamps, length, user_latent, item_latent, path_attention_layer_1, path_attention_layer_2):
     conv_umtm = Conv1D(filters = 128,
@@ -96,7 +97,7 @@ def get_umtm_embedding(umtm_input, path_num, timestamps, length, user_latent, it
     output = GlobalMaxPooling1D()(conv_umtm(path_input))
     output = Dropout(0.5)(output)
 
-    for i in xrange(1, path_num):
+    for i in range(1, path_num):
         path_input = Lambda(slice, output_shape=(timestamps, length), arguments={'index':i})(umtm_input)
         tmp_output = GlobalMaxPooling1D()(conv_umtm(path_input))
         tmp_output = Dropout(0.5)(tmp_output)
@@ -106,7 +107,8 @@ def get_umtm_embedding(umtm_input, path_num, timestamps, length, user_latent, it
     #output = path_attention(user_latent, item_latent, output, 128, 64, path_attention_layer_1, path_attention_layer_2, 'umtm')
     output = GlobalMaxPooling1D()(output)
     return output
-    
+
+
 def get_umum_embedding(umum_input, path_num, timestamps, length, user_latent, item_latent, path_attention_layer_1, path_attention_layer_2):
     conv_umum = Conv1D(filters = 128,
                        kernel_size = 4,
@@ -121,7 +123,7 @@ def get_umum_embedding(umum_input, path_num, timestamps, length, user_latent, it
     output = GlobalMaxPooling1D()(conv_umum(path_input))
     output = Dropout(0.5)(output)
 
-    for i in xrange(1, path_num):
+    for i in range(1, path_num):
         path_input = Lambda(slice, output_shape=(timestamps, length), arguments={'index':i})(umum_input)
         tmp_output = GlobalMaxPooling1D()(conv_umum(path_input))
         tmp_output = Dropout(0.5)(tmp_output)
@@ -132,6 +134,7 @@ def get_umum_embedding(umum_input, path_num, timestamps, length, user_latent, it
     #output = path_attention(user_latent, item_latent, output, 128, 64, path_attention_layer_1, path_attention_layer_2, 'umum')
     output = GlobalMaxPooling1D()(output)
     return output
+
 
 def get_uuum_embedding(umum_input, path_num, timestamps, length, user_latent, item_latent, path_attention_layer_1, path_attention_layer_2):
     conv_umum = Conv1D(filters = 128,
@@ -147,7 +150,7 @@ def get_uuum_embedding(umum_input, path_num, timestamps, length, user_latent, it
     output = GlobalMaxPooling1D()(conv_umum(path_input))
     output = Dropout(0.5)(output)
 
-    for i in xrange(1, path_num):
+    for i in range(1, path_num):
         path_input = Lambda(slice, output_shape=(timestamps, length), arguments={'index':i})(umum_input)
         tmp_output = GlobalMaxPooling1D()(conv_umum(path_input))
         tmp_output = Dropout(0.5)(tmp_output)
@@ -164,7 +167,7 @@ def metapath_attention(user_latent, item_latent, metapath_latent, latent_size, a
     #user_latent (batch_size, latent_size)
     #item_latent (batch_size, latent_size)
     #metapath_latent (batch_size, path_num, mp_latent_size)
-    #print user_latent.shape
+    #print(user_latent.shape)
     latent_size = user_latent.shape[1].value
     path_num, mp_latent_size = metapath_latent.shape[1].value, metapath_latent.shape[2].value
     dense_layer_1 = Dense(att_size,
@@ -208,7 +211,8 @@ def user_attention(user_latent, path_output):
     atten = Lambda(lambda x : K.softmax(x), name = 'user_attention_softmax')(output)
     output = multiply([user_latent, atten])
     return output
-    
+
+
 def item_attention(item_latent, path_output):
     latent_size = item_latent.shape[1].value
     
@@ -270,7 +274,7 @@ def get_model(usize, isize, path_nums, timestamps, length, layers = [20, 10], re
     item_atten = item_attention(item_latent, path_output)
      
     output = concatenate([user_atten, path_output, item_atten])
-    for idx in xrange(0, len(layers)):
+    for idx in range(0, len(layers)):
         layer = Dense(layers[idx],
                       kernel_regularizer = l2(0.001),
                       kernel_initializer = 'glorot_normal',
@@ -279,7 +283,7 @@ def get_model(usize, isize, path_nums, timestamps, length, layers = [20, 10], re
         output = layer(output)
     
     #user_output = concatenate([user_atten, path_output])
-    #for idx in xrange(0, len(layers)):
+    #for idx in range(0, len(layers)):
     #    layer = Dense(layers[idx], 
     #                  kernel_regularizer = l2(0.001),
     #                  kernel_initializer = 'glorot_normal',
@@ -288,7 +292,7 @@ def get_model(usize, isize, path_nums, timestamps, length, layers = [20, 10], re
     #    user_output = layer(user_output)
                                 
     #item_output = concatenate([path_output, item_atten])
-    #for idx in xrange(0, len(layers)):
+    #for idx in range(0, len(layers)):
     #    layer = Dense(layers[idx],
     #                  kernel_regularizer = l2(0.001),
     #                  kernel_initializer = 'glorot_normal',
@@ -298,7 +302,7 @@ def get_model(usize, isize, path_nums, timestamps, length, layers = [20, 10], re
     
     #output = concatenate([user_output, item_output])
 
-    print 'output.shape = ', output.shape
+    print('output.shape = ', output.shape)
     prediction_layer = Dense(1, 
                        activation = 'sigmoid',
                        kernel_initializer = 'lecun_normal',
@@ -308,6 +312,7 @@ def get_model(usize, isize, path_nums, timestamps, length, layers = [20, 10], re
     model = Model(inputs = [user_input, item_input, umtm_input, umum_input, umtmum_input, uuum_input], outputs = [prediction])
 
     return model
+
 
 def get_train_instances(user_feature, item_feature, type_feature, path_umtm, path_umum, path_umtmum, path_uuum, path_nums, timestamps, train_list, num_negatives, batch_size, shuffle = True):
     num_batches_per_epoch = int((len(train_list) - 1) / batch_size) + 1
@@ -385,7 +390,7 @@ def get_train_instances(user_feature, item_feature, type_feature, path_umtm, pat
                     _labels[k] = 1.0
                     k += 1
                     #negative instances
-                    for t in xrange(num_negatives):
+                    for t in range(num_negatives):
                         j = np.random.randint(1, num_items-1)
                         while j in user_item_map[u]:
                             j = np.random.randint(1, num_items-1)
@@ -431,7 +436,7 @@ def get_train_instances(user_feature, item_feature, type_feature, path_umtm, pat
                         if (u, j) in path_uuum:
                             for p_i in range(len(path_uuum[(u, j)])):
                                 for p_j in range(len(path_uuum[(u, j)][p_i])):
-                                    type_id = path_uuum[(u, j)][p_i][p_j][0];
+                                    type_id = path_uuum[(u, j)][p_i][p_j][0]
                                     index = path_uuum[(u, j)][p_i][p_j][1]
                                     if type_id == 1 :
                                         _uuum_input[k][p_i][p_j] = user_feature[index]
@@ -443,7 +448,8 @@ def get_train_instances(user_feature, item_feature, type_feature, path_umtm, pat
                         k += 1
                 yield ([_user_input, _item_input, _umtm_input, _umum_input, _umtmum_input, _uuum_input], _labels)
     return num_batches_per_epoch, data_generator()
-    
+
+
 if __name__ == '__main__':
 
     dataset = 'ml-100k'
@@ -461,7 +467,7 @@ if __name__ == '__main__':
     evaluation_threads = 1
     topK = 10
     
-    print 'num_negatives = ', num_negatives
+    print('num_negatives = ', num_negatives)
 
     t1 = time()
     dataset = Dataset('../data/' + dataset)
@@ -480,15 +486,14 @@ if __name__ == '__main__':
     length = dataset.fea_size
 
     print("Load data done [%.1f s]. #user=%d, #item=%d, #train=%d, #test=%d" % (time()-t1, num_users, num_items, len(train), len(testRatings)))
-    print 'path nums = ', path_nums
-    print 'timestamps = ', timestamps
+    print('path nums = ', path_nums)
+    print('timestamps = ', timestamps)
 
     model = get_model(num_users, num_items, path_nums, timestamps, length, layers, reg_layes, latent_dim, reg_latent)
     model.compile(optimizer = Adam(lr = learning_rate, decay = 1e-4),
                   loss = 'binary_crossentropy')
-    #model.compile(optimizer = Nadam(),
+    # model.compile(optimizer = Nadam(),
     #              loss = 'binary_crossentropy')
-    
 
     # Check Init performance
     t1 = time()
@@ -498,44 +503,42 @@ if __name__ == '__main__':
     
     best_p = -1
     p_list, r_list, ndcg_list = [], [], []
-    print 'Begin training....'
+    print('Begin training....')
     
-    for epoch in xrange(epochs):
+    for epoch in range(epochs):
         t1 = time()
         
-        #Generate training instance
+        # Generate training instance
         train_steps, train_batches = get_train_instances(user_feature, item_feature, type_feature, path_umtm, path_umum, path_umtmum, path_uuum, path_nums, timestamps, train, num_negatives, batch_size, True)
         t = time()
-        print '[%.1f s] epoch %d train_steps %d' % (t - t1, epoch, train_steps)
-        #Training
+        print('[%.1f s] epoch %d train_steps %d' % (t - t1, epoch, train_steps))
+        # Training
         hist = model.fit_generator(train_batches,
                                    train_steps,
                                    epochs = 1,
                                    verbose = 0)
-        print 'training time %.1f s' % (time() - t)
-        
-        
-        
+        print('training time %.1f s' % (time() - t))
+
         t2 = time()
         if epoch % verbose == 0:
             (ps, rs, ndcgs) = evaluate_model(model, user_feature, item_feature, type_feature, num_users, num_items, path_umtm, path_umum, path_umtmum, path_uuum, path_nums, timestamps, length, testRatings, testNegatives, topK, evaluation_threads)
             p, r, ndcg, loss = np.array(ps).mean(), np.array(rs).mean(), np.array(ndcgs).mean(), hist.history['loss'][0]
-            print('Iteration %d [%.1f s]: Precision = %.4f, Recall = %.4f, NDCG = %.4f, loss = %.4f [%.1f s]' 
+            print('Iteration %d [%.1f s]: Precision = %.4f, Recall = %.4f, NDCG = %.4f, loss = %.4f [%.1f s]'
                   % (epoch,  t2-t1, p, r, ndcg, loss, time()-t2))
 
-            #if p > best_p:
-            #    best_p = p
-            #    attention_layer_model = Model(inputs=model.input,  
-            #                          outputs = [model.get_layer('user_input').output, model.get_layer('item_input').output, model.get_layer('metapath_attention_softmax').output])
-            #    [user_input_output, item_input_output, metapath_attention_output] = attention_layer_model.predict_generator(train_batches, train_steps)
-            #    with open('../data/ml-100k.attention_2', 'w') as outfile:
-            #        num = user_input_output.shape[0]
-            #        for i in range(num):
-            #            outfile.write(str(user_input_output[i]) + ',' + str(item_input_output[i]))
-            #            for j in range(metapath_attention_output.shape[1]):
-            #                outfile.write(' ' + str(metapath_attention_output[i][j]))
-            #            outfile.write('\n')
-            #    print 'write succeccfully...'
+            # if p > best_p:
+            #     best_p = p
+            #     attention_layer_model = Model(inputs=model.input,
+            #                           outputs = [model.get_layer('user_input').output, model.get_layer('item_input').output, model.get_layer('metapath_attention_softmax').output])
+            #     [user_input_output, item_input_output, metapath_attention_output] = attention_layer_model.predict_generator(train_batches, train_steps)
+            #     with open('../data/ml-100k.attention_2', 'w') as outfile:
+            #         num = user_input_output.shape[0]
+            #         for i in range(num):
+            #             outfile.write(str(user_input_output[i]) + ',' + str(item_input_output[i]))
+            #             for j in range(metapath_attention_output.shape[1]):
+            #                 outfile.write(' ' + str(metapath_attention_output[i][j]))
+            #             outfile.write('\n')
+            #     print('write succeccfully...')
             p_list.append(p)
             r_list.append(r)
             ndcg_list.append(ndcg)
